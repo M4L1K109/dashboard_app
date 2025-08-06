@@ -1,2 +1,0 @@
-# Dashboard App - Pacote principal
-

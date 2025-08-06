@@ -1,8 +1,4 @@
 import os
-import sys
-# DON'T CHANGE THIS !!!
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from src.models.user import db, User, File, Settings
@@ -10,19 +6,31 @@ from src.routes.user import user_bp
 from src.routes.auth import auth_bp
 from src.routes.files import files_bp
 
-app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-app.config['SECRET_KEY'] = 'dashboard_app_secret_key_2024'
+app = Flask(__name__, static_folder='static')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dashboard_app_secret_key_2024')
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
 
 # Configuração CORS
 CORS(app)
 
 # Configuração de upload
-UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Configuração do banco de dados
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    # Para PostgreSQL no Render - corrigir URL se necessário
+    if DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+else:
+    # Para desenvolvimento local - usar SQLite
+    database_dir = os.path.join(os.path.dirname(__file__), 'database')
+    os.makedirs(database_dir, exist_ok=True)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(database_dir, 'app.db')}"
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
@@ -61,6 +69,7 @@ def create_default_settings():
     
     db.session.commit()
 
+# Criar tabelas e dados iniciais
 with app.app_context():
     db.create_all()
     create_admin_user()
@@ -83,5 +92,6 @@ def serve(path):
             return "index.html not found", 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
 

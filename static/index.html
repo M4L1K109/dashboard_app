@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-tv"></i>
+                <span>Dashboard App</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="#" class="nav-link" onclick="showDashboard()">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="#" class="nav-link admin-only" onclick="showManageFiles()" style="display: none;">
+                    <i class="fas fa-folder"></i> Gerenciar Arquivos
+                </a>
+                <a href="#" class="nav-link admin-only" onclick="showManageUsers()" style="display: none;">
+                    <i class="fas fa-users"></i> Gerenciar Usuários
+                </a>
+                <a href="#" class="nav-link" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </a>
+            </div>
+            <div class="nav-toggle" onclick="toggleNav()">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-lock"></i> Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Usuário:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </button>
+            </form>
+            <div id="loginError" class="error-message"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboardSection" class="content-section">
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <h1><i class="fas fa-tv"></i> Dashboard de Exibição</h1>
+                    <div class="dashboard-controls">
+                        <button id="playPauseBtn" class="btn btn-secondary" onclick="togglePlayPause()">
+                            <i class="fas fa-pause"></i> Pausar
+                        </button>
+                        <button id="prevBtn" class="btn btn-secondary" onclick="previousFile()">
+                            <i class="fas fa-step-backward"></i> Anterior
+                        </button>
+                        <button id="nextBtn" class="btn btn-secondary" onclick="nextFile()">
+                            <i class="fas fa-step-forward"></i> Próximo
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="file-display-container">
+                    <div id="fileDisplay" class="file-display">
+                        <div class="no-files">
+                            <i class="fas fa-folder-open"></i>
+                            <p>Nenhum arquivo para exibir</p>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill"></div>
+                        </div>
+                        <div class="file-info">
+                            <span id="currentFileName">-</span>
+                            <span id="timeRemaining">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Manage Files Section -->
+        <section id="manageFilesSection" class="content-section" style="display: none;">
+            <div class="manage-container">
+                <div class="section-header">
+                    <h1><i class="fas fa-folder"></i> Gerenciar Arquivos</h1>
+                    <button class="btn btn-primary" onclick="showUploadModal()">
+                        <i class="fas fa-plus"></i> Adicionar Arquivo
+                    </button>
+                </div>
+                
+                <div class="files-grid" id="filesGrid">
+                    <!-- Files will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Manage Users Section -->
+        <section id="manageUsersSection" class="content-section" style="display: none;">
+            <div class="manage-container">
+                <div class="section-header">
+                    <h1><i class="fas fa-users"></i> Gerenciar Usuários</h1>
+                    <button class="btn btn-primary" onclick="showUserModal()">
+                        <i class="fas fa-user-plus"></i> Adicionar Usuário
+                    </button>
+                </div>
+                
+                <div class="users-grid" id="usersGrid">
+                    <!-- Users will be loaded here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-upload"></i> Upload de Arquivo</h2>
+                <span class="close" onclick="closeUploadModal()">&times;</span>
+            </div>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="fileInput">Arquivo:</label>
+                    <input type="file" id="fileInput" name="file" accept=".mp4,.avi,.xlsx,.xls,.csv,.ods,.pdf" required>
+                    <small>Formatos suportados: MP4, AVI, Excel, CSV, PDF</small>
+                </div>
+                <div class="form-group">
+                    <label for="displayTime">Tempo de Exibição (segundos):</label>
+                    <input type="number" id="displayTime" name="display_time" value="10" min="1" max="300" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeUploadModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Enviar
+                    </button>
+                </div>
+            </form>
+            <div id="uploadProgress" class="upload-progress" style="display: none;">
+                <div class="progress-bar">
+                    <div id="uploadProgressFill" class="progress-fill"></div>
+                </div>
+                <span id="uploadProgressText">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-plus"></i> Adicionar Usuário</h2>
+                <span class="close" onclick="closeUserModal()">&times;</span>
+            </div>
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="newUsername">Usuário:</label>
+                    <input type="text" id="newUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">Senha:</label>
+                    <input type="password" id="newPassword" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="userRole">Função:</label>
+                    <select id="userRole" name="role">
+                        <option value="user">Usuário</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="canUpload" name="can_upload">
+                        <span class="checkmark"></span>
+                        Pode fazer upload de arquivos
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Carregando...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
